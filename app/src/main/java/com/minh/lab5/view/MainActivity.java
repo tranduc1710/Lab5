@@ -1,12 +1,17 @@
 package com.minh.lab5.view;
 
 import android.databinding.DataBindingUtil;
+import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.View;
 
 import com.minh.lab5.R;
 import com.minh.lab5.databinding.ActivityMainBinding;
@@ -25,6 +30,13 @@ public class MainActivity extends AppCompatActivity {
     ActivityMainBinding binding;
     private AdapterIconChat adapterIconChat;
     private List<Lab5> lab5s;
+    private int mPageNumer = 1;
+    private int mTotalItem = 10;
+
+    private boolean isLoading = true;
+    private int visibleitem, visibleItemCount, totalItem, pre_item ;
+    private int view_the = 10;
+    RecyclerView.LayoutManager layoutManager;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,12 +46,63 @@ public class MainActivity extends AppCompatActivity {
         getSupportActionBar().setHomeButtonEnabled(true);
         binding.toolbar.setTitle("jonh Musk");
         binding.toolbar.setSubtitle("Last active");
-        binding.recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        layoutManager = new LinearLayoutManager(this);
+
+        binding.recyclerView.setLayoutManager(layoutManager);
+        ((LinearLayoutManager)binding.recyclerView.getLayoutManager()).setStackFromEnd(true);
         binding.recyclerView.setHasFixedSize(true);
+
+        binding.recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                visibleItemCount = layoutManager.getChildCount();
+                totalItem = layoutManager.getItemCount();
+                visibleitem = ((LinearLayoutManager) binding.recyclerView.getLayoutManager()).findFirstVisibleItemPosition();
+                if (dy > 0) {
+                    if (isLoading) {
+                        if (totalItem > pre_item) {
+                            isLoading = false;
+                            pre_item = totalItem;
+                        }
+                    }
+                    if (!isLoading && (totalItem - visibleItemCount) <= (visibleitem + view_the)) {
+                        mPageNumer++;
+                        loadMore();
+                        isLoading = true;
+                    }
+                }
+            }
+        });
         GetData();
+
+
+    }
+    private void loadMore() {
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                binding.progressBar.setVisibility(View.VISIBLE);
+                APIuntil.getData().getLab("5", "1").enqueue(new Callback<List<Lab5>>() {
+                    @Override
+                    public void onResponse(Call<List<Lab5>> call, Response<List<Lab5>> response) {
+                       List<Lab5> lab5 = response.body();
+
+                        adapterIconChat.AddItem(lab5);
+                        binding.progressBar.setVisibility(View.GONE);
+                    }
+
+                    @Override
+                    public void onFailure(Call<List<Lab5>> call, Throwable t) {
+                        Log.d("////", t.getMessage());
+                    }
+                });
+            }
+        }, 1500);
+
     }
 
     private void GetData(){
+        binding.progressBar.setVisibility(View.VISIBLE);
         APIuntil.getData().getLab("5", "1").enqueue(new Callback<List<Lab5>>() {
             @Override
             public void onResponse(Call<List<Lab5>> call, Response<List<Lab5>> response) {

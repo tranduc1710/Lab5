@@ -1,7 +1,9 @@
 package com.minh.lab5.view.adapter;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.databinding.DataBindingUtil;
+import android.graphics.Color;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -27,14 +29,21 @@ public class AdapterIconChat extends RecyclerView.Adapter<AdapterIconChat.ViewHo
     @NonNull
     @Override
     public ViewHodel onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-        IconchatBinding binding = DataBindingUtil.inflate(LayoutInflater.from(viewGroup.getContext()), R.layout.iconchat, viewGroup,false);
+        IconchatBinding binding = DataBindingUtil.inflate(LayoutInflater.from(viewGroup.getContext()), R.layout.iconchat, viewGroup, false);
         return new ViewHodel(binding);
     }
 
+    @SuppressLint("ResourceAsColor")
     @Override
     public void onBindViewHolder(@NonNull ViewHodel viewHodel, int i) {
         Lab5 lab5 = lab5s.get(i);
         viewHodel.bind(lab5);
+        if (i % 2 == 0) {
+            viewHodel.binding.contr.setBackgroundColor(Color.WHITE);
+        } else {
+            viewHodel.binding.contr.setBackgroundColor(Color.YELLOW);
+
+        }
 
     }
 
@@ -53,5 +62,12 @@ public class AdapterIconChat extends RecyclerView.Adapter<AdapterIconChat.ViewHo
             binding.setRender(lab5);
             binding.executePendingBindings();
         }
+    }
+
+    public void AddItem(List<Lab5> lab5){
+        for(Lab5 item : lab5){
+            lab5s.add(item);
+        }
+        notifyDataSetChanged();
     }
 }
